@@ -110,10 +110,6 @@ Extensible and Future-Proof:
 
 - New backends and protocols can be added without disrupting existing functionality.
 
-## This project serves as a powerful, extensible platform for SQL-like operations, combining traditional and modern data platforms into a single cohesive system. 🚀
-
-
-
 
 
 
@@ -194,3 +190,7 @@ logger.js: Winston logger configuration.
 - Documentation:
     Include detailed setup instructions and usage examples in README.md.
     This structure ensures the project is modular, maintainable, and scalable.
+
+
+
+### This project serves as a powerful, extensible platform for SQL-like operations, combining traditional and modern data platforms into a single cohesive system. 🚀
