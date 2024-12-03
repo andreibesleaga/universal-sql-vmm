@@ -216,25 +216,25 @@ npm install
 4. Configure Environment Variables
 Create a .env file in the root directory with the following content (adjust values as needed):
 
-# General Configuration
+#### General Configuration
 NODE_ENV=development
 PORT=3000
 
-# JWT Authentication
+#### JWT Authentication
 JWT_SECRET=your-secret-key
 
-# Database Configuration
+#### Database Configuration
 DB_CLIENT=sqlite3
 DB_FILENAME=./data.sqlite
 
-# Redis Configuration
+#### Redis Configuration
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 
-# Kafka Configuration
+#### Kafka Configuration
 KAFKA_BROKER=localhost:9092
 
-# Blockchain Configuration
+#### Blockchain Configuration
 HEDERA_OPERATOR_ID=0.0.xxxx
 HEDERA_OPERATOR_KEY=302e020100300506032b657004220420...
 HEDERA_CONTRACT_ID=0.0.xxxx
