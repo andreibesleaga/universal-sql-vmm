@@ -156,11 +156,11 @@ mqttServer.js: MQTT client and server for SQL operations.
 Implements WebSocket access:
 websocketServer.js: WebSocket server for SQL operations.
 
-6. blockchain/
+6. contracts/
 Handles blockchain-related files:
 sqlContract.js: Smart contract for Hyperledger Fabric.
 connection.json: Connection profile for Hyperledger Fabric.
-wallet/: Stores identities for Hyperledger Fabric.
+wallets/: Stores identities for Hyperledger Fabric.
 
 7. logs/
 Stores log files:

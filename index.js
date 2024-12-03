@@ -6,7 +6,7 @@ const { startGRPCServer } = require('./grpc/grpcServer');
 const { startMQTTServer } = require('./mqtt/mqttServer');
 const { startWebSocketServer } = require('./websocket/websocketServer');
 const logger = require('./logger');
-const {security} = require('../security');
+const {security} = require('./security');
 
 const app = express();
 app.use(bodyParser.json());
