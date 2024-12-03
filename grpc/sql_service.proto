@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+service SQLService {
+  rpc Execute(SQLRequest) returns (SQLResponse);
+}
+
+message SQLRequest {
+  string sql = 1;
+  string adapter = 2;
+}
+
+message SQLResponse {
+  string result = 1;
+  string error = 2;
+}
