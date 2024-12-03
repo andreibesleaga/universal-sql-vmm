@@ -12,57 +12,57 @@ This project is a microservice designed to execute SQL-like operations across mu
 
 The microservice routes SQL queries to different backends based on the adapter specified in the request. Supported backends include:
 
-Relational Databases (e.g., SQLite, MySQL, PostgreSQL) using knex.
-Redis for key-value store emulation.
-Kafka for publish-subscribe messaging with SQL-like operations.
-Hedera Hashgraph for ledger-based SQL operations via smart contracts.
-Hyperledger Fabric for distributed ledger operations using chaincode.
+- Relational Databases (e.g., SQLite, MySQL, PostgreSQL) using knex.
+- Redis for key-value store emulation.
+- Kafka for publish-subscribe messaging with SQL-like operations.
+- Hedera Hashgraph for ledger-based SQL operations via smart contracts.
+- Hyperledger Fabric for distributed ledger operations using chaincode.
 
 2. Protocol Support
 The service supports multiple communication protocols:
 
-REST API: Accessible via HTTP endpoints.
-gRPC: High-performance, secure communication with authentication via metadata.
-WebSockets: Real-time, bidirectional communication for SQL execution.
-MQTT: Lightweight messaging protocol for IoT and pub/sub applications.
+- REST API: Accessible via HTTP endpoints.
+- gRPC: High-performance, secure communication with authentication via metadata.
+- WebSockets: Real-time, bidirectional communication for SQL execution.
+- MQTT: Lightweight messaging protocol for IoT and pub/sub applications.
 
 3. Security
-JWT Authentication: Ensures secure access to all interfaces (REST, gRPC, WebSocket, MQTT).
-Input Validation: Validates SQL queries and adapter specifications to prevent injection attacks.
-Rate Limiting: Limits the number of requests per client to prevent abuse.
-Encryption: Option to use HTTPS/TLS for REST, gRPC, and WebSocket protocols.
+- JWT Authentication: Ensures secure access to all interfaces (REST, gRPC, WebSocket, MQTT).
+- Input Validation: Validates SQL queries and adapter specifications to prevent injection attacks.
+- Rate Limiting: Limits the number of requests per client to prevent abuse.
+- Encryption: Option to use HTTPS/TLS for REST, gRPC, and WebSocket protocols.
 
 4. SQL Parsing
-node-sql-parser library for accurate parsing of SQL queries into structured Abstract Syntax Trees (AST).
-Supports SQL operations:
-SELECT
-INSERT
-UPDATE
-DELETE
+- Uses node-sql-parser library for accurate parsing of SQL queries into structured Abstract Syntax Trees (AST).
+- Supports SQL operations (depending on backend adapter used):
+- SELECT
+- INSERT
+- UPDATE
+- DELETE
 
 5. Logging and Monitoring
-Centralized logging with Winston for tracking requests, responses, and errors.
-Separate log files for combined logs (combined.log) and errors (error.log).
+- Centralized logging with Winston for tracking requests, responses, and errors.
+- Separate log files for combined logs (combined.log) and errors (error.log).
 
 6. Extensibility
-Modular architecture enables the addition of new adapters or backends with minimal effort.
-Easily extendable to support additional SQL operations or protocols.
+- Modular architecture enables the addition of new adapters or backends with minimal effort.
+- Easily extendable to support additional SQL operations or protocols.
 
 
 ### How It Works
 
-SQL Query Parsing:
+- SQL Query Parsing:
 SQL queries are parsed into AST using node-sql-parser.
 Extracted details include operation type (e.g., SELECT), target table, columns, values, and conditions.
 
-Routing:
+- Routing:
 Based on the specified adapter, the query is routed to the appropriate backend (e.g., database, Redis, Kafka, blockchain).
 
-Execution:
+- Execution:
 Each backend has its adapter implementing standard CRUD-like operations (SELECT, INSERT, UPDATE, DELETE).
 Response:
 
-The result is returned to the client in a consistent format.
+- The result is returned to the client in a consistent format.
 
 ### Use Cases
 1. Distributed SQL Operations
@@ -117,7 +117,7 @@ Extensible and Future-Proof:
 
 
 
-Input for emulated supported SQL instructions/data:
+### Input for emulated supported SQL instructions/data:
 
 - REST/API
 - gRPC
@@ -132,9 +132,7 @@ Adapters:
 - Kafka
 
 
-
-
-Key Files Explained
+## Key Files Explained
 
 1. adapters/
 Holds adapters for all backends:
@@ -186,14 +184,13 @@ index.js: Main entry point, initializes REST, WebSocket, gRPC, MQTT servers.
 logger.js: Winston logger configuration.
 
 ### Final Notes
-Environment Variables:
+- Environment Variables:
     Add sensitive configurations like blockchain keys, database credentials, and RPC URLs in .env.
-Dependencies:
+- Dependencies:
     Ensure all required Node.js packages (express, knex, @hashgraph/sdk, fabric-network, etc.) are installed.
-
-Scripts:
+- Scripts:
     Start server: node index.js
     Initialize database: node migrations/initDb.js
-Documentation:
+- Documentation:
     Include detailed setup instructions and usage examples in README.md.
     This structure ensures the project is modular, maintainable, and scalable.
