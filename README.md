@@ -207,8 +207,8 @@ Ensure the following tools are installed:
 
 2. Clone the Repository
 Clone the project repository to your local machine:
-git clone https://github.com/your-repository/sql-microservice.git
-cd sql-microservice
+git clone https://github.com/andreibesleaga/universal-sql-vmm.git
+cd universal-sql-vmm
 
 3. Install Dependencies
 Install all necessary packages:
@@ -342,6 +342,6 @@ For deployment:
 
 Use a process manager like PM2 to manage the Node.js application:
 npm install -g pm2
-pm2 start index.js --name sql-microservice
+pm2 start index.js --name universal-sql-vmm
 Set up a reverse proxy (e.g., NGINX) for handling HTTPS and load balancing.
 
