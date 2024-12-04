@@ -210,7 +210,8 @@ cd universal-sql-vmm
 3. Install Dependencies
 Install all necessary packages:
 npm install
-4. Configure Environment Variables
+
+5. Configure Environment Variables
 Create a .env file in the root directory with the following content (adjust values as needed):
 
 #### General Configuration
@@ -220,18 +221,7 @@ PORT=3000
 #### JWT Authentication
 JWT_SECRET=your-secret-key
 
-#### Database Configuration
-DB_CLIENT=sqlite3
-DB_FILENAME=./data.sqlite
-
-#### Redis Configuration
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-
-#### Kafka Configuration
-KAFKA_BROKER=localhost:9092
-
-#### Blockchain Configuration
+# Hedera Configuration
 HEDERA_OPERATOR_ID=0.0.xxxx
 HEDERA_OPERATOR_KEY=302e020100300506032b657004220420...
 HEDERA_CONTRACT_ID=0.0.xxxx
@@ -250,8 +240,8 @@ docker run --name redis -p 6379:6379 -d redis
 7. Set Up Kafka (Optional)
 If Kafka is required, run Kafka using Docker Compose. Add the following content to a docker-compose.yml file:
 
-yaml
-Copy code
+yaml:
+
 version: '3.7'
 services:
   zookeeper:
