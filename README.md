@@ -162,6 +162,8 @@ Handles blockchain-related files:
 sqlContract.js: Smart contract for Hyperledger Fabric.
 connection.json: Connection profile for Hyperledger Fabric.
 wallets/: Stores identities for Hyperledger Fabric.
+ethereum contracts
+hedera contracts
 
 7. logs/
 Stores log files:

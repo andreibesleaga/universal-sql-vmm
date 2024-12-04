@@ -29,6 +29,7 @@
     "morgan": "^1.10.0",
     "mqtt": "^4.3.7",
     "node-sql-parser": "^5.3.5",
+    "sqlite3": "^5.1.7",
     "supertest": "^6.3.3",
     "web3": "^4.16.0",
     "winston": "^3.8.2",

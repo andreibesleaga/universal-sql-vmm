@@ -5,6 +5,7 @@ const {validateInput, validateToken} = require('../security');
 
 const startMQTTServer = () => {
     const client = mqtt.connect('mqtt://localhost');
+
     client.on('connect', (connack) => {
         if (!validateToken(connack.auth)) {
             logger.warn('MQTT: Unauthorized Access');
@@ -13,6 +14,19 @@ const startMQTTServer = () => {
         logger.info('MQTT server connected');
         client.subscribe('sql/request');
     });
+
+    client.on('client-auth', (client, auth, callback) => {
+        try {
+            const token = auth.password.toString();
+            const decoded = validateToken(token);
+            logger.info('MQTT: Authentication successful', { user: decoded.user });
+            callback(null, true); // Accept the client connection
+        } catch (error) {
+            logger.error('MQTT: Authentication failed', { error: error.message });
+            callback(new Error('Not authorized'), false); // Reject the connection
+        }
+    });
+
     client.on('message', async (topic, message) => {
         logger.info('MQTT: Incoming Request', {
             topic,

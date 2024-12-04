@@ -1,10 +1,10 @@
 const { Parser } = require('node-sql-parser');
 const dbAdapter = require('../adapters/dbAdapter');
-const redisAdapter = require('../adapters/redisAdapter');
-const kafkaAdapter = require('../adapters/kafkaAdapter');
-const hederaAdapter = require('../adapters/hederaAdapter');
-const ethereumAdapter = require('../adapters/ethereumAdapter');
-const hyperledgerAdapter = require('../adapters/hyperledgerAdapter');
+//const redisAdapter = require('../adapters/redisAdapter');
+//const kafkaAdapter = require('../adapters/kafkaAdapter');
+//const hederaAdapter = require('../adapters/hederaAdapter');
+//const ethereumAdapter = require('../adapters/ethereumAdapter');
+//const hyperledgerAdapter = require('../adapters/hyperledgerAdapter');
 const logger = require('../logger');
 
 // Initialize SQL Parser
