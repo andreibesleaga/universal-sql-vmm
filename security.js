@@ -1,15 +1,29 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-const SECRET_KEY = process.env.JWT_SECRET;
+require('dotenv').config();
+
+const SECRET_KEY = 'JWT_SECRET'; //process.env.JWT_SECRET;
 const ENCRYPTION_KEY = crypto.randomBytes(32);
 const IV = crypto.randomBytes(16);
+
+const appToken = () => {
+    return jwt.sign({
+        appId: 'UniversalSQLVMM',
+        permissions: ['execute']
+    }, SECRET_KEY, {
+        expiresIn: '1h'
+    });
+}
 
 const encrypt = (data) => {
     const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, IV);
     let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return { iv: IV.toString('hex'), data: encrypted };
+    return {
+        iv: IV.toString('hex'),
+        data: encrypted
+    };
 };
 
 const decrypt = (encrypted) => {
@@ -38,7 +52,17 @@ const encryptResponse = (data) => {
     const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, IV);
     let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return { iv: IV.toString('hex'), data: encrypted };
+    return {
+        iv: IV.toString('hex'),
+        data: encrypted
+    };
 };
 
-module.exports = { validateToken, encryptResponse, validateInput, encrypt, decrypt };
+module.exports = {
+    validateToken,
+    encryptResponse,
+    validateInput,
+    encrypt,
+    decrypt,
+    appToken
+};

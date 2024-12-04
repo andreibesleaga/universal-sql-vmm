@@ -7,10 +7,10 @@ const kafkaAdapter = require('../../adapters/kafkaAdapter');
 describe('Adapters', () => {
     describe('Database Adapter', () => {
         it('should execute SELECT queries', async () => {
-            const mockResult = [{ name: 'Alice', age: 35 }];
+            const mockResult = [{ value: 'Alice', key: 35 }];
             sinon.stub(dbAdapter, 'execute').resolves(mockResult);
 
-            const result = await dbAdapter.execute('select', 'users', ['name', 'age'], null, { age: '> 30' });
+            const result = await dbAdapter.execute('select', 'test', ['value', 'key'], null, { key: '> 30' });
             expect(result).to.eql(mockResult);
 
             dbAdapter.execute.restore();

@@ -5,10 +5,14 @@ const rateLimit = require('express-rate-limit');
 const { startGRPCServer } = require('./grpc/grpcServer');
 const { startMQTTServer } = require('./mqtt/mqttServer');
 const { startWebSocketServer } = require('./websocket/websocketServer');
+const {validateToken, validateInput} = require('./security');
+const morgan = require('morgan');
 const logger = require('./logger');
-const {security} = require('./security');
+
+require('dotenv').config();
 
 const app = express();
+app.use(morgan('combined', { stream: logger.stream }));
 app.use(bodyParser.json());
 app.use(helmet());
 
@@ -26,7 +30,7 @@ const authenticate = (req, res, next) => {
     if (!token) return res.status(401).send({ error: 'Unauthorized' });
 
     try {
-        const decoded = security.validateToken(token);
+        const decoded = validateToken(token);
         req.user = decoded;
         next();
     } catch (error) {
@@ -43,7 +47,7 @@ app.post('/execute', async (req, res) => {
     const { sql, adapter, options } = req.body;
     if (!sql || !adapter) return res.status(400).send({ error: 'SQL and adapter are required.' });
     
-    security.validateInput(sql, adapter);
+    validateInput(sql, adapter);
 
     try {
         logger.info('Executing SQL', { sql, adapter });

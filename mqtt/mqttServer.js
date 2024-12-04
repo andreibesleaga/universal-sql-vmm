@@ -1,12 +1,12 @@
 const mqtt = require('mqtt');
 const sqlInterpreter = require('../sqlvm/sqlInterpreter');
 const logger = require('../logger');
-const security = require('../security');
+const {validateInput, validateToken} = require('../security');
 
 const startMQTTServer = () => {
     const client = mqtt.connect('mqtt://localhost');
     client.on('connect', (connack) => {
-        if (!security.validateToken(connack.auth)) {
+        if (!validateToken(connack.auth)) {
             logger.warn('MQTT: Unauthorized Access');
             client.end();
         }
@@ -25,7 +25,7 @@ const startMQTTServer = () => {
                 options
             } = JSON.parse(message.toString());
             
-            security.validateInput(sql, adapter);
+            validateInput(sql, adapter);
             
             const result = await sqlInterpreter.execute(sql, adapter, options || {});
             logger.info('MQTT: Execution Successful', {

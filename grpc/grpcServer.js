@@ -2,7 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const sqlInterpreter = require('../sqlvm/sqlInterpreter');
 const logger = require('../logger');
-const security = require('../security');
+const {validateInput, validateToken} = require('../security');
 
 // Load gRPC service definition
 const PROTO_PATH = __dirname + '/sql_service.proto';
@@ -21,7 +21,7 @@ const authenticate = (call, next) => {
         }
 
         const token = metadata[0];
-        const decoded = security.validateToken(token);
+        const decoded = validateToken(token);
         call.request.user = decoded; // Attach user info to the request
         next();
     } catch (error) {
@@ -59,7 +59,7 @@ const startGRPCServer = () => {
             if (err) {
                 callback(err, null);
             } else {
-                security.validateInput(call.request.sql, call.request.adapter);
+                validateInput(call.request.sql, call.request.adapter);
                 executeSQL(call, callback);
             }
         });
@@ -68,7 +68,6 @@ const startGRPCServer = () => {
 
     server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
         logger.info('gRPC server running on port 50051');
-        server.start();
     });
 };
 

@@ -15,7 +15,7 @@ describe('WebSocket API Integration', () => {
 
     it('should respond to SQL queries', (done) => {
         ws.send(
-            JSON.stringify({ sql: "SELECT * FROM users", adapter: "database" })
+            JSON.stringify({ sql: "SELECT * FROM test", adapter: "database" })
         );
 
         ws.on('message', (message) => {

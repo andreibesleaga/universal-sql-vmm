@@ -1,14 +1,14 @@
 const WebSocket = require('ws');
 const sqlInterpreter = require('../sqlvm/sqlInterpreter');
 const logger = require('../logger');
-const security = require('../security');
+const {validateInput, validateToken} = require('../security');
 
 const startWebSocketServer = (server) => {
     const wss = new WebSocket.Server({ server });
 
-    wss.on('connection', (ws) => {
+    wss.on('connection', (ws, req) => {
         const token = req.headers['authorization'];
-        if (!security.validateToken(token)) {
+        if (!validateToken(token)) {
             logger.warn('WebSocket: Unauthorized Access', { clientIP: req.socket.remoteAddress });
             ws.close();
         }
@@ -16,7 +16,7 @@ const startWebSocketServer = (server) => {
         ws.on('message', async (message) => {
             try {
                 const { sql, adapter, options } = JSON.parse(message);
-                security.validateInput(sql, adapter);
+                validateInput(sql, adapter);
                 const result = await sqlInterpreter.execute(sql, adapter, options || {});
                 ws.send(JSON.stringify({ result }));
             } catch (error) {

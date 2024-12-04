@@ -1,6 +1,8 @@
 const { ethers } = require('ethers');
 const logger = require('../logger');
 
+require('dotenv').config();
+
 const RPC_URL = process.env.ETHEREUM_RPC_URL;
 const PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY;
 

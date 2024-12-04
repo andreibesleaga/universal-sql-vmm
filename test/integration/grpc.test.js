@@ -1,6 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const { expect } = require('chai');
+const { appToken } = require('../../security');
 
 const PROTO_PATH = __dirname + '/../../grpc/sql_service.proto';
 const packageDefinition = protoLoader.loadSync(PROTO_PATH);
@@ -12,9 +13,13 @@ describe('gRPC API Integration', () => {
         grpc.credentials.createInsecure()
     );
 
+    var meta = new grpc.Metadata();
+    meta.add('authorization', appToken());    
+
     it('should respond to SQL queries', (done) => {
         client.Execute(
-            { sql: "SELECT * FROM users", adapter: "database" },
+            { sql: "SELECT * FROM test", adapter: "database" },
+            meta,
             (err, response) => {
                 expect(err).to.be.null;
                 expect(response).to.have.property('result');
@@ -26,6 +31,7 @@ describe('gRPC API Integration', () => {
     it('should handle errors gracefully', (done) => {
         client.Execute(
             { sql: "", adapter: "unknown" },
+            meta,
             (err, response) => {
                 expect(err).to.be.null;
                 expect(response).to.have.property('error');

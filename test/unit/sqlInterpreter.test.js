@@ -6,9 +6,9 @@ const redisAdapter = require('../../adapters/redisAdapter');
 
 describe('SQL Interpreter', () => {
     it('should route SELECT queries to the database adapter', async () => {
-        const sql = "SELECT name, age FROM users WHERE age > 30";
+        const sql = "SELECT value, key FROM test WHERE key > 30";
         const adapter = 'database';
-        const mockResult = [{ name: 'Alice', age: 35 }];
+        const mockResult = [{ test: 'Alice', key: 35 }];
 
         sinon.stub(dbAdapter, 'execute').resolves(mockResult);
 
@@ -32,7 +32,7 @@ describe('SQL Interpreter', () => {
     });
 
     it('should throw an error for unsupported adapters', async () => {
-        const sql = "SELECT * FROM users";
+        const sql = "SELECT * FROM test";
         const adapter = 'unknown';
 
         try {

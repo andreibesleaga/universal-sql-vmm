@@ -1,13 +1,15 @@
 const request = require('supertest');
 const { expect } = require('chai');
-const app = require('../../index'); // Your Express app
+const app = require('../../index');
+const {appToken} = require('../../security');
 
 describe('REST API Integration', () => {
     it('should respond to SQL queries', async () => {
         const res = await request(app)
             .post('/execute')
+            .set('Authorization', appToken())
             .send({
-                sql: "SELECT name, age FROM users WHERE age > 30",
+                sql: "SELECT value, key FROM test WHERE key > 30",
                 adapter: "database",
             });
 
@@ -18,6 +20,7 @@ describe('REST API Integration', () => {
     it('should return 400 for missing SQL parameters', async () => {
         const res = await request(app)
             .post('/execute')
+            .set('Authorization', appToken())
             .send({ adapter: 'database' });
 
         expect(res.status).to.equal(400);
@@ -29,7 +32,7 @@ describe('REST API Integration', () => {
             .post('/execute')
             .set('Authorization', 'InvalidToken')
             .send({
-                sql: "SELECT * FROM users",
+                sql: "SELECT * FROM test",
                 adapter: "database",
             });
 
