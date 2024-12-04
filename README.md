@@ -17,9 +17,10 @@ The microservice routes SQL queries to different backends based on the adapter s
 - Kafka for publish-subscribe messaging with SQL-like operations.
 - Hedera Hashgraph for ledger-based SQL operations via smart contracts.
 - Hyperledger Fabric for distributed ledger operations using chaincode.
+- Ethereum chain for distributed ledger operations using chaincode smart contracts.
 
 2. Protocol Support
-The service supports multiple communication protocols:
+The service supports multiple communication protocols interfaces, to be accessed from:
 
 - REST API: Accessible via HTTP endpoints.
 - gRPC: High-performance, secure communication with authentication via metadata.
@@ -111,8 +112,6 @@ Extensible and Future-Proof:
 - New backends and protocols can be added without disrupting existing functionality.
 
 
-
-
 ### Input for emulated supported SQL instructions/data:
 
 - REST/API
@@ -121,11 +120,11 @@ Extensible and Future-Proof:
 
 Adapters:
 - SQL DB: 
-    MySQL, PostgreSQL, Sqlite
+    MySQL, PostgreSQL, Sqlite (can be extended with other SQL adapters via knex and/or other libs)
 - Blockchain: 
-    Ethereum, Hedera, Hyperledger
-- Redis
-- Kafka
+    Ethereum, Hedera, Hyperledger (and enforced operations via chain smart contracts code) - only supported operations (eg: DELETE not supported)
+- Redis (fast in-memory emulated SQL and data)
+- Kafka (distributed SQL DB, via Kafka messaging usage, only supported SQL operations)
 
 
 ## Key Files Explained
@@ -179,7 +178,7 @@ Holds test cases for unit and integration testing.
 index.js: Main entry point, initializes REST, WebSocket, gRPC, MQTT servers.
 logger.js: Winston logger configuration.
 
-### Final Notes
+### Final Notes on Config
 - Environment Variables:
     Add sensitive configurations like blockchain keys, database credentials, and RPC URLs in .env.
 - Dependencies:
@@ -190,10 +189,6 @@ logger.js: Winston logger configuration.
 - Documentation:
     Include detailed setup instructions and usage examples in README.md.
     This structure ensures the project is modular, maintainable, and scalable.
-
-
-
-#### This project serves as a powerful, extensible platform for SQL-like operations, combining traditional and modern data platforms into a single cohesive system. 🚀
 
 
 ### Here are the step-by-step instructions to install and run the SQL Microservice project:
@@ -345,3 +340,6 @@ npm install -g pm2
 pm2 start index.js --name universal-sql-vmm
 Set up a reverse proxy (e.g., NGINX) for handling HTTPS and load balancing.
 
+
+
+#### This project serves as a powerful, extensible platform for SQL-like operations, combining traditional and modern data platforms into a single cohesive system. 🚀
