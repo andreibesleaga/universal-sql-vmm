@@ -4,7 +4,8 @@ This project provides a microservice with SQL-like operations emulated across mu
 
 ### Project Summary
 
-This project is a microservice designed to execute SQL-like operations across multiple backends, including traditional databases, Redis, Kafka, and blockchain platforms such as Hedera Hashgraph and Hyperledger Fabric. The service provides a unified interface for handling SQL queries and supports multiple access protocols, ensuring versatility and ease of integration.
+This project is a microservice designed to execute SQL-like operations across multiple backends (traditional databases, Redis, Kafka, and blockchain platforms such as Hedera Hashgraph and Hyperledger Fabric).
+The service provides a unified interface for handling SQL queries and supports multiple access protocols (via REST, gRPC, WebSocket, MQTT), ensuring versatility and ease of integration.
 
 ### Key Features
 
@@ -117,6 +118,7 @@ Extensible and Future-Proof:
 - REST/API
 - gRPC
 - MQTT
+- WebSocket
 
 Adapters:
 - SQL DB: 
