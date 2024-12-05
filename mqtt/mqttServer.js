@@ -7,7 +7,7 @@ const startMQTTServer = () => {
     const client = mqtt.connect('mqtt://localhost');
 
     client.on('connect', (connack) => {
-        if (!validateToken(connack.auth)) {
+        if (!(connack)) {
             logger.warn('MQTT: Unauthorized Access');
             client.end();
         }

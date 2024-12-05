@@ -10,7 +10,7 @@ const IV = crypto.randomBytes(16);
 const appToken = () => {
     return jwt.sign({
         appId: 'UniversalSQLVMM',
-        permissions: ['execute']
+        user: 'User'
     }, SECRET_KEY, {
         expiresIn: '1h'
     });
@@ -35,6 +35,10 @@ const decrypt = (encrypted) => {
 
 const validateToken = (token) => {
     try {
+        if(token.startsWith('Bearer ')) {
+            token = token.split(' ')[1];
+        }
+        console.log(token);
         return jwt.verify(token, SECRET_KEY);
     } catch (error) {
         throw new Error('Invalid token');
