@@ -335,5 +335,3 @@ pm2 start index.js --name universal-sql-vmm
 Set up a reverse proxy (e.g., NGINX) for handling HTTPS and load balancing.
 
 
-
-#### This project serves as a powerful, extensible platform for SQL-like operations, combining traditional and modern data platforms into a single cohesive system. 🚀
