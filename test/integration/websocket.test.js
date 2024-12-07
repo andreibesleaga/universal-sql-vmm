@@ -1,13 +1,13 @@
 const WebSocket = require('ws');
 const { expect } = require('chai');
 const jwt = require('jsonwebtoken');
-const {appToken} = require('../../security');
+const {appToken, getSecret} = require('../../security');
 
 describe('WebSocket Integration Tests', function () {
     this.timeout(5000); // Extend timeout for async operations
 
     const serverUrl = 'ws://localhost:3000'; // Replace with your WebSocket server URL
-    const secretKey = 'JWT_SECRET'; // Ensure this matches the server's JWT secret
+    const secretKey = getSecret(); //'JWT_SECRET'; // Ensure this matches the server's JWT secret
     const validToken = appToken();
     const invalidToken = 'invalid-token';
 

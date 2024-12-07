@@ -52,7 +52,7 @@ app.post('/execute', async (req, res) => {
 
     try {
         logger.info('Executing SQL', { sql, adapter });
-        const result = await sqlInterpreter.execute(sql, adapter, options || {});
+        const result = await sqlInterpreter.execute(sql, adapter, options || { timeout: 5000 });
         res.status(200).send(result);
     } catch (error) {
         logger.error('SQL Execution failed', { error: error.message });

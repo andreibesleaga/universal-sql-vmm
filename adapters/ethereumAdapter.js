@@ -22,24 +22,24 @@ const execute = async (type, table, fields, values, where) => {
 
         switch (type) {
             case 'select': {
-                const result = await contract.getRecord(table); // Example function
+                const result = await contract.selectRecords(table, fields, values);
                 logger.info('Ethereum: SELECT successful', { result });
                 return { result };
             }
             case 'insert': {
-                const tx = await contract.insertRecord(table, fields, values); // Example function
+                const tx = await contract.insertRecord(table, fields, values);
                 const receipt = await tx.wait();
                 logger.info('Ethereum: INSERT successful', { receipt });
                 return { receipt };
             }
             case 'update': {
-                const tx = await contract.updateRecord(table, fields, values); // Example function
+                const tx = await contract.updateRecords(table, fields, values, fields); 
                 const receipt = await tx.wait();
                 logger.info('Ethereum: UPDATE successful', { receipt });
                 return { receipt };
             }
             case 'delete': {
-                const tx = await contract.deleteRecord(table); // Example function
+                const tx = await contract.deleteRecords(table, fields, values);
                 const receipt = await tx.wait();
                 logger.info('Ethereum: DELETE successful', { receipt });
                 return { receipt };

@@ -15,7 +15,7 @@ contract SQLHederaContract {
      * @param fields Array of field names
      * @param values Array of values corresponding to the fields
      */
-    function insert(
+    function insertRecord(
         string memory table,
         string[] memory fields,
         string[] memory values
@@ -35,7 +35,7 @@ contract SQLHederaContract {
      * @param value Value to filter
      * @return results Matching records
      */
-    function select(
+    function selectRecord(
         string memory table,
         string memory field,
         string memory value
@@ -80,7 +80,7 @@ contract SQLHederaContract {
      * @param filterField Field to filter by
      * @param filterValue Value to filter by
      */
-    function update(
+    function updateRecord(
         string memory table,
         string memory field,
         string memory newValue,
@@ -119,7 +119,7 @@ contract SQLHederaContract {
      * @param filterField Field to filter by
      * @param filterValue Value to filter by
      */
-    function deleteRecords(
+    function deleteRecord(
         string memory table,
         string memory filterField,
         string memory filterValue

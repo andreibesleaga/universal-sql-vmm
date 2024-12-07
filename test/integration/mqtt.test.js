@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const mqtt = require('mqtt');
 const jwt = require('jsonwebtoken');
+const { appToken, getSecret } = require('../../security');
 
 describe('MQTT Integration Tests with Authentication', function () {
     this.timeout(5000); // Extend timeout for async operations
@@ -9,8 +10,8 @@ describe('MQTT Integration Tests with Authentication', function () {
     const requestTopic = 'sql/request';
     const responseTopic = 'sql/response';
 
-    const secretKey = 'your-secret-key'; // Ensure this matches the server's secret
-    const validToken = jwt.sign({ user: 'test-user' }, secretKey, { expiresIn: '1h' }); // Generate a valid JWT
+    const secretKey = getSecret(); //'your-secret-key'; // Ensure this matches the server's secret
+    const validToken = appToken(); // jwt.sign({ user: 'test-user' }, secretKey, { expiresIn: '1h' }); // Generate a valid JWT
     const invalidToken = 'invalid-token';
 
     let client;

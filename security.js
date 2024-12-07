@@ -16,6 +16,10 @@ const appToken = () => {
     });
 }
 
+const getSecret = () => {
+    return SECRET_KEY;
+}
+
 const encrypt = (data) => {
     const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, IV);
     let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
@@ -68,5 +72,6 @@ module.exports = {
     validateInput,
     encrypt,
     decrypt,
-    appToken
+    appToken,
+    getSecret,
 };

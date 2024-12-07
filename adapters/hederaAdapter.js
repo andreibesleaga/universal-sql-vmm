@@ -33,7 +33,7 @@ const execute = async (type, table, fields, values, where) => {
             case 'select': {
                 const query = new ContractCallQuery()
                     .setContractId(CONTRACT_ID)
-                    .setFunction('getRecord', [table]); // Example function
+                    .setFunction('selectRecord', [table, fields, where]);
                 const result = await query.execute(client);
                 const decodedResult = result.getString(0); // Assuming it returns a string
                 logger.info('Hedera: SELECT successful', {
@@ -46,7 +46,7 @@ const execute = async (type, table, fields, values, where) => {
             case 'insert': {
                 const tx = new ContractExecuteTransaction()
                     .setContractId(CONTRACT_ID)
-                    .setFunction('insertRecord', [table, fields.join(','), values.join(',')]); // Example function
+                    .setFunction('insertRecord', [table, fields.join(','), values.join(',')]);
                 const receipt = await tx.execute(client).getReceipt(client);
                 logger.info('Hedera: INSERT successful', {
                     status: receipt.status
@@ -58,7 +58,7 @@ const execute = async (type, table, fields, values, where) => {
             case 'update': {
                 const tx = new ContractExecuteTransaction()
                     .setContractId(CONTRACT_ID)
-                    .setFunction('updateRecord', [table, fields.join(','), values.join(',')]); // Example function
+                    .setFunction('updateRecord', [table, fields.join(','), values.join(','), fields, where]);
                 const receipt = await tx.execute(client).getReceipt(client);
                 logger.info('Hedera: UPDATE successful', {
                     status: receipt.status
@@ -70,7 +70,7 @@ const execute = async (type, table, fields, values, where) => {
             case 'delete': {
                 const tx = new ContractExecuteTransaction()
                     .setContractId(CONTRACT_ID)
-                    .setFunction('deleteRecord', [table]); // Example function
+                    .setFunction('deleteRecord', [table, fields, values]);
                 const receipt = await tx.execute(client).getReceipt(client);
                 logger.info('Hedera: DELETE successful', {
                     status: receipt.status

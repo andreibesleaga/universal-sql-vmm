@@ -15,7 +15,7 @@ contract SQLContract {
      * @param fields Comma-separated field names
      * @param values Comma-separated values
      */
-    function insert(
+    function insertRecord(
         string memory table,
         string[] memory fields,
         string[] memory values
@@ -35,7 +35,7 @@ contract SQLContract {
      * @param value Value to filter
      * @return results Matching records
      */
-    function select(
+    function selectRecords(
         string memory table,
         string memory field,
         string memory value
@@ -84,7 +84,7 @@ contract SQLContract {
      * @param filterField Field to filter
      * @param filterValue Value to filter
      */
-    function update(
+    function updateRecords(
         string memory table,
         string memory field,
         string memory newValue,
