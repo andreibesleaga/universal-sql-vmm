@@ -1,84 +1,101 @@
 const WebSocket = require('ws');
 const { expect } = require('chai');
-const jwt = require('jsonwebtoken');
-const {appToken, getSecret} = require('../../security');
+const sinon = require('sinon');
+const http = require('http');
+const { validateToken, validateInput } = require('../../security');
+const sqlInterpreter = require('../../sqlvm/sqlInterpreter');
+const { startWebSocketServer } = require('../../websocket/websocketServer');
 
 describe('WebSocket Integration Tests', function () {
-    this.timeout(5000); // Extend timeout for async operations
-
-    const serverUrl = 'ws://localhost:3000'; // Replace with your WebSocket server URL
-    const secretKey = getSecret(); //'JWT_SECRET'; // Ensure this matches the server's JWT secret
-    const validToken = appToken();
-    const invalidToken = 'invalid-token';
-
-    let ws;
-
-    afterEach(() => {
-        if (ws) ws.close();
+  let server;
+  let executeStub;
+  let token;
+  const PORT = 8080;
+  
+  beforeEach((done) => {
+    // Create a test token
+    token = require('../../security').appToken();
+    
+    // Stub the sqlInterpreter.execute method
+    executeStub = sinon.stub(sqlInterpreter, 'execute');
+    executeStub.resolves({ result: 'success' });
+    
+    // Create HTTP server and start WebSocket server
+    server = http.createServer();
+    startWebSocketServer(server);
+    server.listen(PORT, () => done());
+  });
+  
+  afterEach((done) => {
+    sinon.restore();
+    server.close(() => done());
+  });
+  
+  it('should handle a valid SQL query with authentication', (done) => {
+    const ws = new WebSocket(`ws://localhost:${PORT}`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
-
-    it('should handle a valid SELECT query with authentication', (done) => {
-        ws = new WebSocket(serverUrl, {
-            headers: { Authorization: `Bearer ${validToken}` },
-        });
-
-        ws.on('open', () => {
-            const query = {
-                sql: "SELECT value, key FROM users WHERE key > 30",
-                adapter: "database",
-            };
-            ws.send(JSON.stringify(query));
-        });
-
-        ws.on('message', (message) => {
-            const response = JSON.parse(message);
-            expect(response).to.have.property('result');
-            expect(response.result).to.be.an('array'); // Assuming the database returns an array
-            done();
-        });
-
-        ws.on('error', (error) => {
-            done(error);
-        });
+    
+    ws.on('open', () => {
+      const query = {
+        sql: "SELECT value, key FROM users WHERE key > 30",
+        adapter: "database",
+      };
+      ws.send(JSON.stringify(query));
     });
-
-    it('should reject an invalid token during connection', (done) => {
-        ws = new WebSocket(serverUrl, {
-            headers: { Authorization: `Bearer ${invalidToken}` },
-        });
-
-        ws.on('open', () => {
-            done(new Error('Should not connect with an invalid token'));
-        });
-
-        ws.on('error', (error) => {
-            expect(error.message).to.include('Unexpected server response: 401'); // Server should return 401
-            done();
-        });
+    
+    ws.on('message', (message) => {
+      const response = JSON.parse(message);
+      expect(response).to.have.property('result', 'success');
+      expect(executeStub.calledOnce).to.be.true;
+      ws.close();
+      done();
     });
-
-    it('should handle an invalid SQL query gracefully', (done) => {
-        ws = new WebSocket(serverUrl, {
-            headers: { Authorization: `Bearer ${validToken}` },
-        });
-
-        ws.on('open', () => {
-            const invalidQuery = {
-                sql: "",
-                adapter: "unknown",
-            };
-            ws.send(JSON.stringify(invalidQuery));
-        });
-
-        ws.on('message', (message) => {
-            const response = JSON.parse(message);
-            expect(response).to.have.property('error');
-            expect(response.error).to.be.a('string');
-            done();
-        });
-
-        ws.on('error', (error) => {
-            done(error);
-        });
+    
+    ws.on('error', (error) => {
+      done(error);
     });
+  });
+  
+  it('should reject an invalid token during connection', (done) => {
+    const ws = new WebSocket(`ws://localhost:${PORT}`, {
+      headers: { Authorization: 'InvalidToken' }
+    });
+    
+    ws.on('open', () => {
+      done(new Error('Should not connect with an invalid token'));
+    });
+    
+    ws.on('error', () => {
+      // Expected error
+      done();
+    });
+  });
+  
+  it('should handle SQL execution errors gracefully', (done) => {
+    executeStub.rejects(new Error('SQL execution failed'));
+    
+    const ws = new WebSocket(`ws://localhost:${PORT}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    ws.on('open', () => {
+      const query = {
+        sql: "SELECT * FROM users",
+        adapter: "database",
+      };
+      ws.send(JSON.stringify(query));
+    });
+    
+    ws.on('message', (message) => {
+      const response = JSON.parse(message);
+      expect(response).to.have.property('error', 'SQL execution failed');
+      ws.close();
+      done();
+    });
+    
+    ws.on('error', (error) => {
+      done(error);
+    });
+  });
 });

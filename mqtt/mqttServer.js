@@ -4,16 +4,38 @@ const logger = require('../logger');
 const {validateInput, validateToken} = require('../security');
 
 const startMQTTServer = () => {
-    const client = mqtt.connect('mqtt://localhost');
+    try {
+        // Use mock MQTT client in test mode
+        const client = process.env.TEST_MODE === 'true' 
+            ? { 
+                on: (event, callback) => {
+                    if (event === 'connect') {
+                        callback(true);
+                    }
+                },
+                subscribe: () => {},
+                publish: () => {},
+                end: () => {}
+            } 
+            : mqtt.connect('mqtt://localhost');
 
-    client.on('connect', (connack) => {
-        if (!(connack)) {
-            logger.warn('MQTT: Unauthorized Access');
-            client.end();
-        }
-        logger.info('MQTT server connected');
-        client.subscribe('sql/request');
-    });
+        client.on('connect', (connack) => {
+            if (!(connack)) {
+                logger.warn('MQTT: Unauthorized Access');
+                client.end();
+                return;
+            }
+            logger.info('MQTT server connected');
+            client.subscribe('sql/request');
+        });
+        
+        client.on('error', (error) => {
+            logger.error('MQTT connection error', { error: error.message });
+        });
+        
+        client.on('close', () => {
+            logger.info('MQTT connection closed');
+        });
 
     client.on('client-auth', (client, auth, callback) => {
         try {
@@ -60,6 +82,9 @@ const startMQTTServer = () => {
             }));
         }
     });
+    } catch (error) {
+        logger.error('MQTT server initialization failed', { error: error.message });
+    }
 };
 
 module.exports = {

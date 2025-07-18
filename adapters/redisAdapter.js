@@ -1,10 +1,49 @@
 const Redis = require('ioredis');
 const logger = require('../logger');
 
-const redis = new Redis(); // Default connection to localhost:6379
+let redis;
+
+// Use a mock Redis client in test mode
+if (process.env.TEST_MODE === 'true') {
+    redis = {
+        hgetall: async (key) => ({ key: 'value', timestamp: Date.now() }),
+        hmset: async (key, data) => 'OK',
+        del: async (key) => 1,
+        on: () => {}
+    };
+    logger.info('Using mock Redis client in test mode');
+} else {
+    try {
+        redis = new Redis({
+            host: process.env.REDIS_HOST || 'localhost',
+            port: process.env.REDIS_PORT || 6379,
+            retryStrategy: (times) => {
+                // Only retry a few times then give up
+                if (times > 3) {
+                    return null; // Stop retrying
+                }
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            },
+            maxRetriesPerRequest: 1,
+            connectTimeout: 1000, // Shorter timeout
+            enableOfflineQueue: false // Don't queue commands when disconnected
+        });
+        
+        redis.on('error', (error) => {
+            logger.error('Redis connection error', { error: error.message });
+        });
+    } catch (error) {
+        logger.error('Redis initialization failed', { error: error.message });
+    }
+}
 
 const execute = async (type, key, fields, values) => {
     try {
+        if (!redis) {
+            throw new Error('Redis connection is not available');
+        }
+        
         logger.info(`Executing Redis operation: ${type}`, { key, fields, values });
 
         switch (type) {

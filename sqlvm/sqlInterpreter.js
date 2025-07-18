@@ -10,12 +10,18 @@ const logger = require('../logger');
 // Initialize SQL Parser
 const parser = new Parser();
 const parserOptions = {
-    database: 'mysql' // or 'postgresql', 'transactsql', etc.
+    database: 'mysql', // Default dialect
+    skipUnsupported: true, // Skip unsupported statements
+    supportBigInt: true, // Support BIGINT data type
+    supportUnsigned: true, // Support UNSIGNED data type
+    multipleStatements: true, // Support multiple statements in one query
+    includeHints: true // Include optimizer hints
 };
 
 // Map of supported adapters
 const SUPPORTED_ADAPTERS = {
     database: dbAdapter,
+    sqlite: dbAdapter, // Map sqlite to dbAdapter
     redis: redisAdapter,
     kafka: kafkaAdapter,
     hedera: hederaAdapter,
@@ -31,6 +37,28 @@ const SUPPORTED_ADAPTERS = {
 const extractSQLComponents = (ast) => {
     if (!ast) throw new Error('Invalid AST structure');
 
+    // Special handling for SAVEPOINT
+    if (Array.isArray(ast) && ast[0]?.stmt?.left?.name === 'SAVEPOINT') {
+        return {
+            type: 'savepoint',
+            table: null,
+            columns: [],
+            values: [],
+            where: null,
+            joins: [],
+            groupBy: null,
+            orderBy: null,
+            limit: null,
+            definition: null,
+            privileges: null,
+            users: null,
+            transaction: {
+                type: 'savepoint',
+                name: ast[0]?.stmt?.right?.name?.name?.[0]?.value || null
+            }
+        };
+    }
+
     // Handle array of AST nodes (multiple statements)
     const node = Array.isArray(ast) ? ast[0] : ast;
 
@@ -43,7 +71,14 @@ const extractSQLComponents = (ast) => {
         joins: [],
         groupBy: null,
         orderBy: null,
-        limit: null
+        limit: null,
+        // Additional properties for DDL statements
+        definition: null,
+        // Additional properties for DCL statements
+        privileges: null,
+        users: null,
+        // Additional properties for TCL statements
+        transaction: null
     };
 
     // Extract table information
@@ -67,6 +102,57 @@ const extractSQLComponents = (ast) => {
     } else if (node.table) {
         result.table = Array.isArray(node.table) ? node.table[0]?.table : node.table;
     }
+    
+    // Extract DDL information (CREATE, ALTER, DROP)
+    if (['create', 'alter', 'drop'].includes(result.type)) {
+        result.definition = {
+            keyword: node.keyword,
+            columns: node.create_definitions || node.columns || [],
+            options: node.options || {}
+        };
+    }
+    
+    // Extract DCL information (GRANT, REVOKE)
+    if (['grant', 'revoke'].includes(result.type)) {
+        result.privileges = node.privileges || [];
+        result.users = node.users || [];
+        if (node.on) {
+            result.table = node.on.table;
+        }
+    }
+    
+    // Extract TCL information (COMMIT, ROLLBACK, SAVEPOINT, TRANSACTION)
+    if (['commit', 'rollback', 'savepoint', 'start', 'begin', 'transaction'].includes(result.type)) {
+        result.transaction = {
+            type: result.type,
+            name: node.name || null
+        };
+    }
+    
+    // Special handling for BEGIN TRANSACTION
+    if (result.type === 'transaction' && node.expr && node.expr.action && 
+        node.expr.action.value) {
+        const action = node.expr.action.value.toLowerCase();
+        if (action === 'begin') {
+            result.type = 'begin';
+            result.transaction = {
+                type: 'begin',
+                name: null
+            };
+        } else if (action === 'commit') {
+            result.type = 'commit';
+            result.transaction = {
+                type: 'commit',
+                name: null
+            };
+        } else if (action === 'rollback') {
+            result.type = 'rollback';
+            result.transaction = {
+                type: 'rollback',
+                name: null
+            };
+        }
+    }
 
     // Extract columns
     if (node.columns) {
@@ -79,11 +165,33 @@ const extractSQLComponents = (ast) => {
 
     // Extract values for INSERT
     if (node.values) {
-        result.values = node.values.map(row => 
-            Array.isArray(row) 
-                ? row.map(val => val?.value) 
-                : row.value
-        );
+        // Handle different AST structures for values
+        if (Array.isArray(node.values)) {
+            result.values = {};
+            // Extract column names from the columns array
+            if (node.columns && Array.isArray(node.columns)) {
+                const columnNames = node.columns.map(col => {
+                    return typeof col === 'string' ? col : (col.value || col.column);
+                });
+                
+                // Extract values from the first row (assuming single row insert)
+                if (node.values[0] && node.values[0].value && Array.isArray(node.values[0].value)) {
+                    const rowValues = node.values[0].value.map(val => {
+                        if (val && typeof val === 'object') {
+                            return val.value;
+                        }
+                        return val;
+                    });
+                    
+                    // Create an object with column names as keys and values
+                    columnNames.forEach((col, index) => {
+                        if (index < rowValues.length) {
+                            result.values[col] = rowValues[index];
+                        }
+                    });
+                }
+            }
+        }
     }
 
     // Extract WHERE clause
@@ -130,14 +238,27 @@ const extractSQLComponents = (ast) => {
 const validateSQLComponents = ({ type, table }) => {
     if (!type) throw new Error('SQL type is required');
     
-    const validTypes = ['select', 'insert', 'update', 'delete'];
+    // DML - Data Manipulation Language
+    const dmlTypes = ['select', 'insert', 'update', 'delete', 'merge', 'call', 'explain', 'describe'];
+    
+    // DDL - Data Definition Language
+    const ddlTypes = ['create', 'alter', 'drop', 'truncate', 'rename', 'comment'];
+    
+    // DCL - Data Control Language
+    const dclTypes = ['grant', 'revoke', 'deny'];
+    
+    // TCL - Transaction Control Language
+    const tclTypes = ['commit', 'rollback', 'savepoint', 'set', 'start', 'begin', 'end', 'transaction'];
+    
+    const validTypes = [...dmlTypes, ...ddlTypes, ...dclTypes, ...tclTypes];
+    
     if (!validTypes.includes(type.toLowerCase())) {
         throw new Error(`Unsupported SQL type: ${type}. Supported types are: ${validTypes.join(', ')}`);
     }
 
     // Only validate table presence for operations that require it
-    if (['select', 'insert', 'update', 'delete'].includes(type.toLowerCase()) && !table) {
-        throw new Error('Table name is required');
+    if (dmlTypes.includes(type.toLowerCase()) && !['call', 'explain', 'describe'].includes(type.toLowerCase()) && !table) {
+        throw new Error('Table name is required for this operation');
     }
 };
 
@@ -156,11 +277,24 @@ const parseSQL = (sql) => {
         // Normalize the SQL query
         const normalizedSQL = sql.trim().replace(/\s+/g, ' ');
         
-        // Parse the SQL
-        const ast = parser.astify(normalizedSQL, parserOptions);
+        // Try different SQL dialects if needed
+        let ast;
+        const dialects = ['mysql', 'postgresql', 'transactsql'];
+        let lastError;
+        
+        for (const dialect of dialects) {
+            try {
+                const options = { ...parserOptions, database: dialect };
+                ast = parser.astify(normalizedSQL, options);
+                if (ast) break;
+            } catch (err) {
+                lastError = err;
+                // Continue trying other dialects
+            }
+        }
         
         if (!ast) {
-            throw new Error('Failed to generate AST from SQL query');
+            throw lastError || new Error('Failed to generate AST from SQL query');
         }
 
         logger.info('SQLInterpreter: Parsed SQL AST', { 
@@ -219,14 +353,63 @@ const execute = async (sql, adapter, options = {}) => {
         logger.info('SQLInterpreter: Parsed SQL', sqlComponents);
 
         // Execute the query using the appropriate adapter
-        const result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
-            sqlComponents.type,
-            sqlComponents.table,
-            sqlComponents.columns,
-            sqlComponents.values,
-            sqlComponents.where,
-            options
-        );
+        let result;
+        
+        // DML operations (SELECT, INSERT, UPDATE, DELETE)
+        if (['select', 'insert', 'update', 'delete'].includes(sqlComponents.type)) {
+            result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
+                sqlComponents.type,
+                sqlComponents.table,
+                sqlComponents.columns,
+                sqlComponents.values,
+                sqlComponents.where,
+                options
+            );
+        }
+        // DDL operations (CREATE, ALTER, DROP, etc.)
+        else if (['create', 'alter', 'drop', 'truncate', 'rename'].includes(sqlComponents.type)) {
+            result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
+                sqlComponents.type,
+                sqlComponents.table,
+                null,
+                sqlComponents.definition,
+                null,
+                options
+            );
+        }
+        // DCL operations (GRANT, REVOKE)
+        else if (['grant', 'revoke'].includes(sqlComponents.type)) {
+            result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
+                sqlComponents.type,
+                sqlComponents.table,
+                sqlComponents.privileges,
+                sqlComponents.users,
+                null,
+                options
+            );
+        }
+        // TCL operations (COMMIT, ROLLBACK, etc.)
+        else if (['commit', 'rollback', 'savepoint', 'start', 'begin', 'end'].includes(sqlComponents.type)) {
+            result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
+                sqlComponents.type,
+                null,
+                null,
+                sqlComponents.transaction,
+                null,
+                options
+            );
+        }
+        // Default fallback for other operations
+        else {
+            result = await SUPPORTED_ADAPTERS[normalizedAdapter].execute(
+                sqlComponents.type,
+                sqlComponents.table,
+                sqlComponents.columns,
+                sqlComponents.values,
+                sqlComponents.where,
+                options
+            );
+        }
 
         return result;
     } catch (error) {

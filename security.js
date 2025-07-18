@@ -3,9 +3,10 @@ const crypto = require('crypto');
 
 require('dotenv').config();
 
-const SECRET_KEY = 'JWT_SECRET'; //process.env.JWT_SECRET;
-const ENCRYPTION_KEY = crypto.randomBytes(32);
-const IV = crypto.randomBytes(16);
+const SECRET_KEY = process.env.JWT_SECRET || 'default-jwt-secret-for-development';
+// Use fixed keys for development, in production these should be securely stored
+const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY || '01234567890123456789012345678901', 'utf8');
+const IV = Buffer.from(process.env.ENCRYPTION_IV || '0123456789012345', 'utf8');
 
 const appToken = () => {
     return jwt.sign({
@@ -42,7 +43,7 @@ const validateToken = (token) => {
         if(token.startsWith('Bearer ')) {
             token = token.split(' ')[1];
         }
-        console.log(token);
+        // Remove console.log of token for security
         return jwt.verify(token, SECRET_KEY);
     } catch (error) {
         throw new Error('Invalid token');

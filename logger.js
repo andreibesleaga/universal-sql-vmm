@@ -15,4 +15,11 @@ const logger = createLogger({
     ],
 });
 
+// Add stream property for morgan integration
+logger.stream = {
+    write: (message) => {
+        logger.info(message.trim());
+    }
+};
+
 module.exports = logger;

@@ -8,9 +8,16 @@ const startWebSocketServer = (server) => {
 
     wss.on('connection', (ws, req) => {
         const token = req.headers['authorization'];
-        if (!validateToken(token)) {
-            logger.warn('WebSocket: Unauthorized Access', { clientIP: req.socket.remoteAddress });
-            ws.close();
+        try {
+            if (!token || !validateToken(token)) {
+                logger.warn('WebSocket: Unauthorized Access', { clientIP: req.socket.remoteAddress });
+                ws.close(1008, 'Unauthorized');
+                return;
+            }
+        } catch (error) {
+            logger.warn('WebSocket: Invalid token', { clientIP: req.socket.remoteAddress, error: error.message });
+            ws.close(1008, 'Invalid token');
+            return;
         }
 
         ws.on('message', async (message) => {

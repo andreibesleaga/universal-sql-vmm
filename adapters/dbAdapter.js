@@ -13,9 +13,19 @@ const dbConfig = {
     },
 };
 
-const execute = async (type, table, columns, values, where, adapter = 'sqlite') => {
-    const db = knex(dbConfig[adapter]);
-    logger.info(`Executing DB operation: ${type} on table: ${table} using ${adapter}`, { columns, values, where });
+// Default adapter is sqlite if not specified
+const DEFAULT_ADAPTER = 'sqlite';
+
+const execute = async (type, table, columns, values, where, adapter = DEFAULT_ADAPTER) => {
+    // Use the specified adapter or default to sqlite
+    const adapterName = adapter && dbConfig[adapter] ? adapter : DEFAULT_ADAPTER;
+    
+    if (!dbConfig[adapterName]) {
+        throw new Error(`Database adapter '${adapterName}' is not configured`);
+    }
+    
+    const db = knex(dbConfig[adapterName]);
+    logger.info(`Executing DB operation: ${type} on table: ${table} using ${adapterName}`, { columns, values, where });
 
     try {
         let result;

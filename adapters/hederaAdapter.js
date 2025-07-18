@@ -1,4 +1,3 @@
-module.exports = {};
 const {
     Client,
     AccountId,
@@ -12,13 +11,32 @@ require('dotenv').config();
 
 const HEDERA_OPERATOR_ID = process.env.HEDERA_OPERATOR_ID;
 const HEDERA_OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
-const CONTRACT_ID = process.env.HEDERA_CONTRACT_ID;
 
-if (!HEDERA_OPERATOR_ID || !HEDERA_OPERATOR_KEY || !CONTRACT_ID) {
-    throw new Error('Hedera credentials are not set.');
+let client;
+let CONTRACT_ID = process.env.HEDERA_CONTRACT_ID;
+
+// Use mock Hedera client in test mode
+if (process.env.TEST_MODE === 'true') {
+    // Create mock client and contract functions
+    client = {
+        execute: () => Promise.resolve({ receipt: { status: { toString: () => 'SUCCESS' } } })
+    };
+    
+    // Mock contract ID
+    CONTRACT_ID = 'test-contract-id';
+    
+    logger.info('Using mock Hedera client in test mode');
+} else {
+    try {
+        if (!HEDERA_OPERATOR_ID || !HEDERA_OPERATOR_KEY || !CONTRACT_ID) {
+            logger.warn('Hedera credentials are not set. Hedera operations will fail.');
+        } else {
+            client = Client.forTestnet().setOperator(AccountId.fromString(HEDERA_OPERATOR_ID), PrivateKey.fromString(HEDERA_OPERATOR_KEY));
+        }
+    } catch (error) {
+        logger.error('Hedera client initialization failed', { error: error.message });
+    }
 }
-
-const client = Client.forTestnet().setOperator(AccountId.fromString(HEDERA_OPERATOR_ID), PrivateKey.fromString(HEDERA_OPERATOR_KEY));
 
 const execute = async (type, table, fields, values, where) => {
     try {

@@ -13,7 +13,7 @@ const sqlInterpreter = require('./sqlvm/sqlInterpreter');
 require('dotenv').config();
 
 const app = express();
-app.use(morgan('combined', { stream: logger.stream.write }));
+app.use(morgan('combined', { stream: logger.stream }));
 app.use(bodyParser.json());
 app.use(helmet());
 

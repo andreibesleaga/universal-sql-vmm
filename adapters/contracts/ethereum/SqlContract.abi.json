@@ -1,0 +1,122 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "table",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "filterField",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "filterValue",
+        "type": "string"
+      }
+    ],
+    "name": "deleteRecords",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "table",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "fields",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "values",
+        "type": "string[]"
+      }
+    ],
+    "name": "insertRecord",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "table",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "field",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "value",
+        "type": "string"
+      }
+    ],
+    "name": "selectRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string[]",
+            "name": "fields",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "values",
+            "type": "string[]"
+          }
+        ],
+        "internalType": "struct SQLContract.Record[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "table",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "field",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "newValue",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "filterField",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "filterValue",
+        "type": "string"
+      }
+    ],
+    "name": "updateRecords",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

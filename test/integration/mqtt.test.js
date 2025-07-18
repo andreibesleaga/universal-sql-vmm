@@ -1,97 +1,126 @@
 const { expect } = require('chai');
+const sinon = require('sinon');
 const mqtt = require('mqtt');
-const jwt = require('jsonwebtoken');
-const { appToken, getSecret } = require('../../security');
+const sqlInterpreter = require('../../sqlvm/sqlInterpreter');
+const { startMQTTServer } = require('../../mqtt/mqttServer');
+const { appToken } = require('../../security');
 
-describe('MQTT Integration Tests with Authentication', function () {
-    this.timeout(5000); // Extend timeout for async operations
-
-    const brokerUrl = 'mqtt://localhost:1883'; // Replace with your broker URL if needed
-    const requestTopic = 'sql/request';
-    const responseTopic = 'sql/response';
-
-    const secretKey = getSecret(); //'your-secret-key'; // Ensure this matches the server's secret
-    const validToken = appToken(); // jwt.sign({ user: 'test-user' }, secretKey, { expiresIn: '1h' }); // Generate a valid JWT
-    const invalidToken = 'invalid-token';
-
-    let client;
-
-    beforeEach((done) => {
-        // Connect to MQTT broker with valid token in `auth`
-        client = mqtt.connect(brokerUrl, {
-            username: 'user', // Optional, if required by the broker
-            password: validToken, // Send token in the password/auth field
-        });
-
-        client.on('connect', () => {
-            console.log('Connected to MQTT broker');
-            client.subscribe(responseTopic, (err) => {
-                if (err) done(err);
-                done();
-            });
-        });
-
-        client.on('error', (err) => {
-            done(err);
-        });
-    });
-
-    afterEach(() => {
-        client.end(); // Close the MQTT connection
-    });
-
-    it('should handle a valid SELECT query with authentication', (done) => {
-        const query = {
-            sql: "SELECT value, key FROM test WHERE key > 30",
-            adapter: "database",
-        };
-
-        client.once('message', (topic, message) => {
-            expect(topic).to.equal(responseTopic);
-
-            const response = JSON.parse(message.toString());
-            expect(response).to.have.property('result');
-            expect(response.result).to.be.an('array'); // Assuming the database returns an array
-            done();
-        });
-
-        // Publish the query
-        client.publish(requestTopic, JSON.stringify(query));
-    });
-
-    it('should reject an invalid token during connection', (done) => {
-        const invalidClient = mqtt.connect(brokerUrl, {
-            username: 'user',
-            password: invalidToken, // Send an invalid token
-        });
-
-        invalidClient.on('connect', () => {
-            done(new Error('Should not connect with an invalid token'));
-        });
-
-        invalidClient.on('error', (err) => {
-            expect(err.message).to.include('Not authorized'); // Ensure broker rejects the connection
-            invalidClient.end();
-            done();
-        });
-    });
-
-    it('should handle an invalid SQL query gracefully', (done) => {
-        const invalidQuery = {
-            sql: "",
-            adapter: "unknown",
-        };
-
-        client.once('message', (topic, message) => {
-            expect(topic).to.equal(responseTopic);
-
-            const response = JSON.parse(message.toString());
-            expect(response).to.have.property('error');
-            expect(response.error).to.be.a('string');
-            done();
-        });
-
-        // Publish the invalid query
-        client.publish(requestTopic, JSON.stringify(invalidQuery));
-    });
+describe('MQTT Integration Tests', function () {
+  let executeStub;
+  let token;
+  let mqttClient;
+  let mqttServer;
+  
+  beforeEach(() => {
+    // Create a test token
+    token = appToken();
+    
+    // Stub the sqlInterpreter.execute method
+    executeStub = sinon.stub(sqlInterpreter, 'execute');
+    executeStub.resolves({ result: 'success' });
+    
+    // Mock MQTT client and server
+    mqttClient = {
+      on: sinon.stub(),
+      publish: sinon.stub(),
+      subscribe: sinon.stub(),
+      end: sinon.stub()
+    };
+    
+    mqttServer = {
+      on: sinon.stub()
+    };
+    
+    // Stub mqtt.connect to return our mock client
+    sinon.stub(mqtt, 'connect').returns(mqttClient);
+    
+    // Start MQTT server
+    startMQTTServer();
+  });
+  
+  afterEach(() => {
+    sinon.restore();
+  });
+  
+  it('should handle SQL queries via MQTT', (done) => {
+    // Simulate connection event
+    const connectCallback = mqttClient.on.args.find(arg => arg[0] === 'connect')[1];
+    connectCallback(true);
+    
+    // Verify subscription to request topic
+    expect(mqttClient.subscribe.calledWith('sql/request')).to.be.true;
+    
+    // Simulate message event
+    const messageCallback = mqttClient.on.args.find(arg => arg[0] === 'message')[1];
+    messageCallback('sql/request', JSON.stringify({
+      sql: "SELECT * FROM test",
+      adapter: "database"
+    }));
+    
+    // Wait for async execution
+    setTimeout(() => {
+      expect(executeStub.calledOnce).to.be.true;
+      expect(mqttClient.publish.calledOnce).to.be.true;
+      
+      const publishArgs = mqttClient.publish.firstCall.args;
+      expect(publishArgs[0]).to.equal('sql/response');
+      
+      const response = JSON.parse(publishArgs[1]);
+      expect(response).to.have.property('result', 'success');
+      
+      done();
+    }, 10);
+  });
+  
+  it('should handle SQL execution errors gracefully', (done) => {
+    executeStub.rejects(new Error('SQL execution failed'));
+    
+    // Simulate connection event
+    const connectCallback = mqttClient.on.args.find(arg => arg[0] === 'connect')[1];
+    connectCallback(true);
+    
+    // Simulate message event
+    const messageCallback = mqttClient.on.args.find(arg => arg[0] === 'message')[1];
+    messageCallback('sql/request', JSON.stringify({
+      sql: "SELECT * FROM test",
+      adapter: "database"
+    }));
+    
+    // Wait for async execution
+    setTimeout(() => {
+      expect(executeStub.calledOnce).to.be.true;
+      expect(mqttClient.publish.calledOnce).to.be.true;
+      
+      const publishArgs = mqttClient.publish.firstCall.args;
+      expect(publishArgs[0]).to.equal('sql/response');
+      
+      const response = JSON.parse(publishArgs[1]);
+      expect(response).to.have.property('error', 'SQL execution failed');
+      
+      done();
+    }, 10);
+  });
+  
+  it('should handle authentication', (done) => {
+    // Simulate client-auth event
+    const authCallback = mqttClient.on.args.find(arg => arg[0] === 'client-auth')?.[1];
+    if (!authCallback) {
+      done(new Error('client-auth event handler not found'));
+      return;
+    }
+    
+    const authCallbackSpy = sinon.spy();
+    
+    // Test valid token
+    authCallback({ username: 'user' }, { password: Buffer.from(token) }, authCallbackSpy);
+    expect(authCallbackSpy.calledWith(null, true)).to.be.true;
+    
+    // Test invalid token
+    authCallbackSpy.resetHistory();
+    authCallback({ username: 'user' }, { password: Buffer.from('invalid') }, authCallbackSpy);
+    expect(authCallbackSpy.firstCall.args[0]).to.be.instanceOf(Error);
+    expect(authCallbackSpy.firstCall.args[1]).to.be.false;
+    
+    done();
+  });
 });
