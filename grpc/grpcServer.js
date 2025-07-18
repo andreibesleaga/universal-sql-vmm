@@ -69,6 +69,9 @@ const startGRPCServer = () => {
     server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
         logger.info('gRPC server running on port 50051');
     });
+    
+    // Return server instance for graceful shutdown
+    return server;
 };
 
 module.exports = { startGRPCServer };

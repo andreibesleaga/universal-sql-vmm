@@ -15,7 +15,8 @@ const startMQTTServer = () => {
                 },
                 subscribe: () => {},
                 publish: () => {},
-                end: () => {}
+                end: () => {},
+                close: (callback) => { if (callback) callback(); }
             } 
             : mqtt.connect('mqtt://localhost');
 
@@ -36,6 +37,9 @@ const startMQTTServer = () => {
         client.on('close', () => {
             logger.info('MQTT connection closed');
         });
+        
+        // Return client instance for graceful shutdown
+        return client;
 
     client.on('client-auth', (client, auth, callback) => {
         try {

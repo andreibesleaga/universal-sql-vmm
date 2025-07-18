@@ -25,6 +25,33 @@ if (process.env.TEST_MODE === 'true') {
     // Mock contract ID
     CONTRACT_ID = 'test-contract-id';
     
+    // Mock ContractCallQuery and ContractExecuteTransaction for tests
+    global.ContractCallQuery = function() {
+        return {
+            setContractId: () => ({
+                setFunction: () => ({
+                    execute: () => Promise.resolve({
+                        getString: () => JSON.stringify({result: 'success'})
+                    })
+                })
+            })
+        };
+    };
+    
+    global.ContractExecuteTransaction = function() {
+        return {
+            setContractId: () => ({
+                setFunction: () => ({
+                    execute: () => ({
+                        getReceipt: () => Promise.resolve({
+                            status: { toString: () => 'SUCCESS' }
+                        })
+                    })
+                })
+            })
+        };
+    };
+    
     logger.info('Using mock Hedera client in test mode');
 } else {
     try {

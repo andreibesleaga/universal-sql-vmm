@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  universal-sql-vmm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: universal-sql-vmm
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # HTTP
+      - "3443:3443"  # HTTPS
+      - "50051:50051" # gRPC
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HTTPS_PORT=3443
+      - USE_HTTPS=true
+      - JWT_SECRET=${JWT_SECRET:-default-jwt-secret-change-in-production}
+      - JWT_EXPIRATION=1h
+      - QUERY_CACHE_TTL=60000
+      - QUERY_CACHE_MAX_SIZE=1000
+      - DATABASE_TIMEOUT=5000
+      - REDIS_TIMEOUT=2000
+      - KAFKA_TIMEOUT=10000
+    volumes:
+      - ./data.sqlite:/app/data.sqlite
+      - ./logs:/app/logs
+      - ./certs:/app/certs
+    networks:
+      - sql-vmm-network
+
+  # Optional Redis service for caching
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - sql-vmm-network
+
+networks:
+  sql-vmm-network:
+    driver: bridge

@@ -6,6 +6,7 @@ const hederaAdapter = require('../adapters/hederaAdapter');
 const ethereumAdapter = require('../adapters/ethereumAdapter');
 const hyperledgerAdapter = require('../adapters/hyperledgerAdapter');
 const logger = require('../logger');
+const queryCache = require('../utils/cache');
 
 // Initialize SQL Parser
 const parser = new Parser();
@@ -352,6 +353,15 @@ const execute = async (sql, adapter, options = {}) => {
 
         logger.info('SQLInterpreter: Parsed SQL', sqlComponents);
 
+        // For SELECT queries, check cache first
+        if (sqlComponents.type === 'select' && options.useCache !== false) {
+            const cachedResult = queryCache.get(sql, normalizedAdapter, options);
+            if (cachedResult) {
+                logger.info('SQLInterpreter: Cache hit', { sql, adapter });
+                return cachedResult;
+            }
+        }
+
         // Execute the query using the appropriate adapter
         let result;
         
@@ -409,6 +419,14 @@ const execute = async (sql, adapter, options = {}) => {
                 sqlComponents.where,
                 options
             );
+        }
+
+        // Cache SELECT query results
+        if (sqlComponents.type === 'select' && options.useCache !== false) {
+            // Use custom TTL if provided in options
+            const ttl = options.cacheTTL || undefined;
+            queryCache.set(sql, normalizedAdapter, options, result, ttl);
+            logger.debug('SQLInterpreter: Cached query result', { sql, adapter });
         }
 
         return result;

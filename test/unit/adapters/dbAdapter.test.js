@@ -6,6 +6,7 @@ const knex = require('knex');
 describe('Database Adapter', () => {
   let knexStub;
   let knexInstance;
+  let connectionPools;
 
   beforeEach(() => {
     // Create mock knex instance
@@ -19,8 +20,14 @@ describe('Database Adapter', () => {
     };
     
     // Stub knex constructor
-    knexStub = sinon.stub(knex, 'knex').returns(knexInstance);
-  });
+    knexStub = sinon.stub(knex).returns(knexInstance);
+    
+    // Reset connection pools
+    connectionPools = {};
+    // Add a reference to our mock instance
+    connectionPools.sqlite = knexInstance;
+    // Expose the connection pools to the adapter
+    dbAdapter.connectionPools = connectionPools;
 
   afterEach(() => {
     sinon.restore();

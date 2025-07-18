@@ -90,4 +90,4 @@ const execute = async (type, key, fields, values) => {
     }
 };
 
-module.exports = { execute };
+module.exports = { execute, redis };

@@ -1,6 +1,6 @@
 {
   "name": "universal-sql-vmm",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A microservice for SQL operations across multiple backends including databases, Redis, Kafka, and blockchain, accessed via gRPC, REST, MQTT",
   "main": "index.js",
   "scripts": {
@@ -14,10 +14,14 @@
     "test:sql": "node test-sql.js",
     "test:sql:comprehensive": "node test/sql-comprehensive.js",
     "test:setup": "node test-setup.js",
-    "lint": "eslint ."
+    "test:load": "node test/load/loadTest.js",
+    "test:e2e": "node test/e2e/e2eTest.js",
+    "test:all": "npm run test && npm run test:sql:comprehensive && npm run test:load && npm run test:e2e",
+    "lint": "eslint .",
+    "security:audit": "npm audit"
   },
   "author": "Andrei Besleaga",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@grpc/grpc-js": "^1.12.4",
     "@grpc/proto-loader": "^0.6.12",
@@ -43,9 +47,12 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
+    "autocannon": "^7.12.0",
+    "axios": "^1.6.2",
     "eslint": "^8.49.0",
     "mocha": "^10.2.0",
     "nodemon": "^3.0.1",
+    "nyc": "^15.1.0",
     "sinon": "^15.0.0"
   }
 }

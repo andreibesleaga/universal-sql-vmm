@@ -102,4 +102,4 @@ const execute = async (type, table, fields, values, where) => {
     }
 };
 
-module.exports = { execute };
+module.exports = { execute, Gateway, connectionProfile, wallet };

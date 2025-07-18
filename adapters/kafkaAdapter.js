@@ -3,6 +3,25 @@ const logger = require('../logger');
 
 let client, producer, consumer;
 
+/**
+ * Check if a message matches the filter criteria
+ * @param {Object} message - Kafka message
+ * @param {Object} where - Filter criteria
+ * @returns {Boolean} True if message matches filter
+ */
+const matchesFilter = (message, where) => {
+    if (!where || Object.keys(where).length === 0) {
+        return true;
+    }
+    
+    try {
+        const data = JSON.parse(message.value);
+        return Object.entries(where).every(([key, value]) => data[key] === value);
+    } catch (error) {
+        return false;
+    }
+};
+
 // Use mock Kafka client in test mode
 if (process.env.TEST_MODE === 'true') {
     client = { on: () => {} };
@@ -86,4 +105,4 @@ const execute = async (type, topic, columns, values, where) => {
     }
 };
 
-module.exports = { execute };
+module.exports = { execute, client, producer, consumer };
