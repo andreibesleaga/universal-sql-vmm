@@ -23,7 +23,7 @@
   "author": "Andrei Besleaga",
   "license": "Apache-2.0",
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.4",
+    "@grpc/grpc-js": "^1.12.5",
     "@grpc/proto-loader": "^0.6.12",
     "@hashgraph/sdk": "^2.17.0",
     "body-parser": "^1.20.2",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "autocannon": "^7.12.0",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "eslint": "^8.49.0",
     "mocha": "^10.2.0",
     "nodemon": "^3.0.1",
